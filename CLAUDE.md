@@ -28,6 +28,7 @@ One JSON file, `memory/memories.json` (diffs in git show what memory learned). E
 - `memlab/db.py`: read-only SQL against Chinook, row cap, schema summary.
 - `memlab/memory.py`: the memory store (propose, accept, reject, verify, index, lookup, search).
 - `memlab/cli.py`: command line to inspect and drive memory by hand: `python3 -m memlab.cli --help`.
+- `memlab/mcp_server.py`: MCP server over stdio, hand-written JSON-RPC (no SDK). Registered in `.mcp.json` as `memlab`, pre-approved in `.claude/settings.json`. Tools: memory_index, memory_lookup, memory_search, memory_propose (any agent); memory_pending, memory_review, memory_verify (memory manager only, enforced by each agent's tool list); db_schema, db_query. `MEMLAB_STORE` env var swaps the memory file (tests).
 - `tests/`: `python3 -m unittest -v`.
 
 ## Build order
@@ -45,4 +46,7 @@ Most of these can't be worked out from the schema alone, which is exactly where 
 - Revenue: Invoice.Total equals the sum of InvoiceLine.UnitPrice × Quantity (2,328.60 both ways); every Quantity is 1.
 
 ## Status
-- Step 1 done: database + memory store + CLI, 14 tests passing. Memory is empty.
+- Step 1 done: database + memory store + CLI.
+- Step 2 done: MCP server; 18 tests passing (incl. end-to-end over stdio); verified Claude Code calls its tools.
+- Memory is empty. Next: step 3 (agents).
+- Later idea: an HTTP transport would let claude.ai or Copilot Studio use the same server (stdio only works for local apps like Claude Code).
