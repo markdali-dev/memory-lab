@@ -33,6 +33,12 @@ One JSON file, `memory/memories.json` (diffs in git show what memory learned). E
 - `scripts/run_agent.py`: run one agent headless with its answer and cost (turns, tokens, time): `python3 scripts/run_agent.py analyst "question"`.
 - `tests/`: `python3 -m unittest -v`.
 
+## Front door (when Mark chats in this project)
+- Business questions about the music store (sales, customers, tracks, employees...): hand them to the `analyst` subagent and pass its answer back, including its `Memory used:` line. Don't answer them yourself with the database tools.
+- If Mark states a business rule or preference, include it in what you send the analyst, so it proposes it to memory.
+- After the analyst has made proposals, offer to run the `memory-manager` subagent to review them.
+- Questions about the code or the project itself: answer normally.
+
 ## Feedback loop contract
 - Who can write: profiler and analyst can only `memory_propose`. Only memory-manager can `memory_review` (accept/reject) and `memory_verify`. Mark's own decisions are proposed via the CLI (`--by mark`) and reviewed the same way.
 - Analyst: `memory_index` first and follow every decision; `memory_lookup` only relevant topics; query the DB; answer ending with `Memory used: <ids>`; then propose at most 3 reusable learnings (search first, never the answer itself, never invented decisions).
