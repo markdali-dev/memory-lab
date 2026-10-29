@@ -29,7 +29,15 @@ One JSON file, `memory/memories.json` (diffs in git show what memory learned). E
 - `memlab/memory.py`: the memory store (propose, accept, reject, verify, index, lookup, search).
 - `memlab/cli.py`: command line to inspect and drive memory by hand: `python3 -m memlab.cli --help`.
 - `memlab/mcp_server.py`: MCP server over stdio, hand-written JSON-RPC (no SDK). Registered in `.mcp.json` as `memlab`, pre-approved in `.claude/settings.json`. Tools: memory_index, memory_lookup, memory_search, memory_propose (any agent); memory_pending, memory_review, memory_verify (memory manager only, enforced by each agent's tool list); db_schema, db_query. `MEMLAB_STORE` env var swaps the memory file (tests).
+- `.claude/agents/`: `profiler.md`, `analyst.md`, `memory-manager.md`. Each lists its allowed memlab tools; that list is what enforces who may do what.
+- `scripts/run_agent.py`: run one agent headless with its answer and cost (turns, tokens, time): `python3 scripts/run_agent.py analyst "question"`.
 - `tests/`: `python3 -m unittest -v`.
+
+## Feedback loop contract
+- Who can write: profiler and analyst can only `memory_propose`. Only memory-manager can `memory_review` (accept/reject) and `memory_verify`. Mark's own decisions are proposed via the CLI (`--by mark`) and reviewed the same way.
+- Analyst: `memory_index` first and follow every decision; `memory_lookup` only relevant topics; query the DB; answer ending with `Memory used: <ids>`; then propose at most 3 reusable learnings (search first, never the answer itself, never invented decisions).
+- What gets proposed: decision (only when the user stated it; source quotes them), gotcha/fact (with evidence SQL), definition (term to tables/joins).
+- Manager accepts only if: one standalone sentence, reusable, right type (decisions must come from a person), evidence re-run and holds, not a duplicate, no unflagged conflict (changes must use `supersedes`), existing topic reused where it fits. Rejections carry a reason.
 
 ## Build order
 1. Database + memory store (done when tests pass).
@@ -48,5 +56,7 @@ Most of these can't be worked out from the schema alone, which is exactly where 
 ## Status
 - Step 1 done: database + memory store + CLI.
 - Step 2 done: MCP server; 18 tests passing (incl. end-to-end over stdio); verified Claude Code calls its tools.
-- Memory is empty. Next: step 3 (agents).
+- Step 3 done: three agents + runner. First run: profiler proposed 8 (with SQL proof), Mark's 3 decisions added, manager accepted 10 and rejected 1 (overlapped a decision). Analyst then answered decision-dependent questions correctly in 6 to 7 turns, and a rule Mark stated mid-question went analyst, then proposal, then accepted (M012). Analyst confirmed unable to review.
+- Memory: 11 accepted, 4 decisions (M009 music excludes video, M010 2013 = this year, M011 top customers by spend, M012 show all ties).
+- Next: step 4 (evaluation, memory off vs on).
 - Later idea: an HTTP transport would let claude.ai or Copilot Studio use the same server (stdio only works for local apps like Claude Code).
